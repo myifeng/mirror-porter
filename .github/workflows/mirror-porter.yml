@@ -1,0 +1,63 @@
+name: Mirror Porter
+on:
+  issues:
+    types: [opened, reopened]
+jobs:
+  mirror-porter-job:
+    runs-on: ubuntu-latest
+    steps:
+      - id: Checkout
+        uses: actions/checkout@v3
+      - name: Generate image name
+        id: generate_image_name
+        run: |
+          source_image=${{ github.event.issue.title }}
+          target_image=${{ secrets.DOCKERHUB_USERNAME }}/${source_image//\//_}
+          echo "::set-output name=source_image::$source_image"
+          echo "::set-output name=source_image_name::${source_image%:*}"
+          echo "::set-output name=target_image::$target_image"
+          echo "::set-output name=target_image_name::${target_image%:*}"
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      - name: Pull and push
+        id: pull-push
+        run: |
+          docker pull ${{ steps.generate_image_name.outputs.source_image }}
+          docker tag ${{ steps.generate_image_name.outputs.source_image }} ${{ steps.generate_image_name.outputs.target_image }}
+          docker push ${{ steps.generate_image_name.outputs.target_image }}
+      - name: Close issue by success
+        uses: actions-cool/issues-helper@v3
+        if: always() && steps.pull-push.outcome == 'success'
+        with:
+          actions: "create-comment,add-labels,close-issue"
+          labels: ${{ steps.pull-push.outcome }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hi @${{ github.event.issue.user.login }} 
+
+            Now, you can use `${{ steps.generate_image_name.outputs.source_image }}` in [`${{ steps.generate_image_name.outputs.target_image }}`](https://hub.docker.com/r/${{ steps.generate_image_name.outputs.target_image_name }})
+
+            ```shell
+            docker pull ${{ steps.generate_image_name.outputs.target_image }}
+            ```
+      - name: Close issue by failure
+        uses: actions-cool/issues-helper@v3
+        if: always() && steps.pull-push.outcome != 'success'
+        with:
+          actions: "create-comment,add-labels,close-issue"
+          labels: ${{ steps.pull-push.outcome }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Sorry @${{ github.event.issue.user.login }} , it seems to fail here.
+      - name: Docker Hub Description
+        uses: peter-evans/dockerhub-description@v2
+        if: always() && steps.pull-push.outcome == 'success'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: ${{ steps.generate_image_name.outputs.target_image_name }}
+          readme-filepath: ./README.md
+          short-description: ${{ steps.generate_image_name.outputs.source_image_name }}

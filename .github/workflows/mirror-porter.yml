@@ -17,17 +17,10 @@ jobs:
           echo "::set-output name=source_image_name::${source_image%:*}"
           echo "::set-output name=target_image::$target_image"
           echo "::set-output name=target_image_name::${target_image%:*}"
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Pull and push
+      - name: Copy image
         id: pull-push
         run: |
-          docker pull ${{ steps.generate_image_name.outputs.source_image }}
-          docker tag ${{ steps.generate_image_name.outputs.source_image }} ${{ steps.generate_image_name.outputs.target_image }}
-          docker push ${{ steps.generate_image_name.outputs.target_image }}
+          docker run quay.io/skopeo/stable:latest copy -a --preserve-digests --remove-signatures --dest-username ${{ secrets.DOCKERHUB_USERNAME }} --dest-password ${{ secrets.DOCKERHUB_PASSWORD }} docker://${{ steps.generate_image_name.outputs.source_image }} docker://${{ steps.generate_image_name.outputs.target_image }}
       - name: Close issue by success
         uses: actions-cool/issues-helper@v3
         if: always() && steps.pull-push.outcome == 'success'

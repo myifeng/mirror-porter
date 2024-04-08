@@ -36,6 +36,10 @@ jobs:
             ```shell
             docker pull ${{ steps.generate_image_name.outputs.target_image }}
             ```
+
+            ```shell
+            docker tag ${{ steps.generate_image_name.outputs.target_image }} ${{ steps.generate_image_name.outputs.source_image }}
+            ```
       - name: Close issue by failure
         uses: actions-cool/issues-helper@v3
         if: always() && steps.pull-push.outcome != 'success'

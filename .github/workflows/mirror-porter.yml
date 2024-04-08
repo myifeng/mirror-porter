@@ -20,7 +20,7 @@ jobs:
       - name: Copy image
         id: pull-push
         run: |
-          docker run quay.io/skopeo/stable:latest copy -a --preserve-digests --remove-signatures --dest-username ${{ secrets.DOCKERHUB_USERNAME }} --dest-password ${{ secrets.DOCKERHUB_PASSWORD }} docker://${{ steps.generate_image_name.outputs.source_image }} docker://${{ steps.generate_image_name.outputs.target_image }}
+          docker run quay.io/skopeo/stable:latest copy -a --preserve-digests --remove-signatures --multi-arch all --dest-username ${{ secrets.DOCKERHUB_USERNAME }} --dest-password ${{ secrets.DOCKERHUB_PASSWORD }} docker://${{ steps.generate_image_name.outputs.source_image }} docker://${{ steps.generate_image_name.outputs.target_image }}
       - name: Close issue by success
         uses: actions-cool/issues-helper@v3
         if: always() && steps.pull-push.outcome == 'success'

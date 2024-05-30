@@ -1,7 +1,7 @@
 name: Mirror Porter
 on:
   issues:
-    types: [opened, reopened]
+    types: [opened, reopened, edited]
 jobs:
   mirror-porter-job:
     runs-on: ubuntu-latest
@@ -42,6 +42,7 @@ jobs:
           actions: "create-comment,add-labels,close-issue"
           labels: ${{ steps.pull-push.outcome }}
           issue-number: ${{ github.event.issue.number }}
+          close-reason: 'completed'
           body: |
             Hi @${{ github.event.issue.user.login }} 
 
@@ -56,13 +57,14 @@ jobs:
             ```
       - name: Close issue by failure
         uses: actions-cool/issues-helper@v3
-        if: always() && steps.pull-push.outcome != 'success'
+        if: always() && steps.pull-push.outcome != 'success' && steps.check-star.outputs.starred != ''
         with:
           actions: "create-comment,add-labels,close-issue"
           labels: ${{ steps.pull-push.outcome }}
           issue-number: ${{ github.event.issue.number }}
           body: |
             Sorry @${{ github.event.issue.user.login }} , it seems to fail here.
+            Please check if the title of the issue is in `image:tag` format.
       - name: Docker Hub Description
         uses: peter-evans/dockerhub-description@v2
         if: always() && steps.pull-push.outcome == 'success'
@@ -80,5 +82,6 @@ jobs:
           labels: "no-starred"
           issue-number: ${{ github.event.issue.number }}
           body: |
-            Sorry @${{ github.event.issue.user.login }} , you have not starred this repository! 
-            Please star this repository and then reopen this issue to retry!
+            Sorry @${{ github.event.issue.user.login }} , you have not starred this repository ! 
+            
+            Please `star` this repository and then `reopen` this issue to retry !

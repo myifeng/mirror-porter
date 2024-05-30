@@ -6,10 +6,23 @@ jobs:
   mirror-porter-job:
     runs-on: ubuntu-latest
     steps:
+      - name: Check if Issue Author Starred the Repo
+        id: check-star
+        run: |
+          echo "Checking if ${{ github.event.issue.user.login }} starred the repo"
+          author=${{ github.event.issue.user.login }}
+          starred=$(curl -s "https://api.github.com/repos/myifeng/mirror-porter/stargazers" | jq -r '.[].login' | grep -w $author || true)
+          if [ -n "$starred" ]; then
+            echo "::set-output name=starred::$starred"
+          else
+            echo "::set-output name=starred::"
+          fi
       - id: Checkout
         uses: actions/checkout@v3
+        if: steps.check-star.outputs.starred != ''
       - name: Generate image name
         id: generate_image_name
+        if: steps.check-star.outputs.starred != ''
         run: |
           source_image=${{ github.event.issue.title }}
           target_image=${{ secrets.DOCKERHUB_USERNAME }}/${source_image//\//_}
@@ -19,11 +32,12 @@ jobs:
           echo "::set-output name=target_image_name::${target_image%:*}"
       - name: Copy image
         id: pull-push
+        if: steps.check-star.outputs.starred != ''
         run: |
           docker run quay.io/skopeo/stable:latest copy -a --preserve-digests --remove-signatures --dest-username ${{ secrets.DOCKERHUB_USERNAME }} --dest-password ${{ secrets.DOCKERHUB_PASSWORD }} docker://${{ steps.generate_image_name.outputs.source_image }} docker://${{ steps.generate_image_name.outputs.target_image }}
       - name: Close issue by success
         uses: actions-cool/issues-helper@v3
-        if: always() && steps.pull-push.outcome == 'success'
+        if: always() && steps.pull-push.outcome == 'success' && steps.check-star.outputs.starred != ''
         with:
           actions: "create-comment,add-labels,close-issue"
           labels: ${{ steps.pull-push.outcome }}
@@ -58,3 +72,13 @@ jobs:
           repository: ${{ steps.generate_image_name.outputs.target_image_name }}
           readme-filepath: ./README.md
           short-description: ${{ steps.generate_image_name.outputs.source_image_name }}
+      - name: Close issue by no-starred
+        uses: actions-cool/issues-helper@v3
+        if: always() && steps.check-star.outputs.starred == ''
+        with:
+          actions: "create-comment,add-labels,close-issue"
+          labels: "no-starred"
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Sorry @${{ github.event.issue.user.login }} , you have not starred this repository! 
+            Please star this repository and then reopen this issue to retry!

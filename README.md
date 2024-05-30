@@ -18,9 +18,10 @@
 
 ## 1. 先在[`myifeng`](https://hub.docker.com/u/myifeng)中搜索自己需要的镜像和版本，如果有可以直接使用
 ## 2. 如果仓库没有自己需要的镜像，则可以创建[ISSUE](https://github.com/myifeng/mirror-porter/issues/new)进行搬运
-## 3. 标题里填写你所需要的镜像，例如 `k8s.gcr.io/kube-scheduler:v1.24.3`
-## 4. 自动搬运成功后，即可在国内通过 [`myifeng/k8s.gcr.io_kube-scheduler:v1.24.3`](https://hub.docker.com/u/myifeng) 正常使用
-## 5. 更多已加速镜像请使用 [`myifeng`](https://hub.docker.com/u/myifeng)
+## 3. 点击右上角`star`星标
+## 4. 标题里填写你所需要的镜像，例如 `k8s.gcr.io/kube-scheduler:v1.24.3`
+## 5. 自动搬运成功后，即可在国内通过 [`myifeng/k8s.gcr.io_kube-scheduler:v1.24.3`](https://hub.docker.com/u/myifeng) 正常使用
+## 6. 更多已加速镜像请使用 [`myifeng`](https://hub.docker.com/u/myifeng)
 
 
 # 匹配规则

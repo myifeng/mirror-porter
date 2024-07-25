@@ -89,6 +89,13 @@ jobs:
           repository: ${{ steps.generate_image_name.outputs.target_image_name }}
           readme-filepath: ./README.md
           short-description: ${{ steps.generate_image_name.outputs.source_image_name }}
+      - name: Remove issue labels
+        uses: actions-cool/issues-helper@v3
+        if: always() && steps.check-star.outputs.starred != ''
+        with:
+          actions: "remove-labels"
+          labels: "no-starred"
+          issue-number: ${{ github.event.issue.number }}
       - name: Close issue by no-starred
         uses: actions-cool/issues-helper@v3
         if: always() && steps.check-star.outputs.starred == ''

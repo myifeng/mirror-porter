@@ -11,10 +11,25 @@ jobs:
         run: |
           echo "Checking if ${{ github.event.issue.user.login }} starred the repo"
           author=${{ github.event.issue.user.login }}
-          starred=$(curl -s "https://api.github.com/repos/myifeng/mirror-porter/stargazers?per_page=100" | jq -r '.[].login' | grep -w $author || true)
-          if [ -n "$starred" ]; then
-            echo "::set-output name=starred::$starred"
-          else
+          page=1
+          per_page=100
+          found="false"
+          
+          while [ "$found" == "false" ]; do
+            response=$(curl -s "https://api.github.com/repos/myifeng/mirror-porter/stargazers?per_page=$per_page&page=$page")
+            logins=$(echo "$response" | jq -r '.[].login')
+            
+            if echo "$logins" | grep -w $author > /dev/null; then
+              found="true"
+              echo "::set-output name=starred::${author}"
+            elif [ -z "$logins" ]; then
+              break
+            else
+              page=$((page + 1))
+            fi
+          done
+          
+          if [ "$found" == "false" ]; then
             echo "::set-output name=starred::"
           fi
       - id: Checkout

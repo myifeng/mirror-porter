@@ -22,7 +22,7 @@ jobs:
             if echo "$logins" | grep -w $author > /dev/null; then
               found="true"
               echo "::set-output name=starred::${author}"
-            elif [ -z "$logins" ]; then
+            elif [ $(echo "$logins" | wc -l) -lt $per_page ]; then
               break
             else
               page=$((page + 1))

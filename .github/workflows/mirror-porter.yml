@@ -11,7 +11,7 @@ jobs:
         run: |
           echo "Checking if ${{ github.event.issue.user.login }} starred the repo"
           author=${{ github.event.issue.user.login }}
-          starred=$(curl -s "https://api.github.com/repos/myifeng/mirror-porter/stargazers" | jq -r '.[].login' | grep -w $author || true)
+          starred=$(curl -s "https://api.github.com/repos/myifeng/mirror-porter/stargazers?per_page=100" | jq -r '.[].login' | grep -w $author || true)
           if [ -n "$starred" ]; then
             echo "::set-output name=starred::$starred"
           else

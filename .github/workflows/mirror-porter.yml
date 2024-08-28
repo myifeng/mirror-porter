@@ -115,6 +115,7 @@ jobs:
       - name: Update images.txt
         id: update
         run: |
+          #!/usr/bin/python
           import os
 
           def extract_image(title):

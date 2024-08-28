@@ -115,6 +115,7 @@ jobs:
       - name: Update images.txt
         id: update
         run: |
+          python3 << EOF
           #!/usr/bin/python
           import os
 
@@ -149,6 +150,7 @@ jobs:
                   f.write(f"{img}\n")
 
           echo "::set-output name=updated::true"
+          EOF
 
       - name: Create Pull Request
         if: steps.update.outputs.updated == 'true'
